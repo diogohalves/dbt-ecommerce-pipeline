@@ -1,0 +1,25 @@
+
+# dbt
+target/
+dbt_packages/
+logs/
+.user.yml
+
+# Seeds — CSVs grandes não vão pro GitHub
+seeds/*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Airflow
+airflow.cfg
+airflow.db
+*.log
+
+# Credenciais — NUNCA subir isso
+.env
+profiles.yml
+*.Zone.Identifier
+*:Zone.Identifier

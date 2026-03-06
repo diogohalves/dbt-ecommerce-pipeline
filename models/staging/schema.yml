@@ -1,0 +1,86 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: "Pedidos limpos e tipados a partir da fonte Olist."
+    columns:
+      - name: order_id
+        description: "Identificador único do pedido."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "Identificador do cliente que realizou o pedido."
+        tests:
+          - not_null
+      - name: status
+        description: "Status atual do pedido (delivered, shipped, canceled, etc)."
+        tests:
+          - accepted_values:
+              values: ['delivered', 'shipped', 'canceled', 'unavailable',
+                       'invoiced', 'processing', 'approved', 'created']
+      - name: purchased_at
+        description: "Timestamp de quando o pedido foi realizado."
+        tests:
+          - not_null
+      - name: delivered_at
+        description: "Timestamp de quando o pedido foi entregue ao cliente."
+
+  - name: stg_customers
+    description: "Clientes limpos e tipados a partir da fonte Olist."
+    columns:
+      - name: customer_id
+        description: "Identificador único do cliente por pedido."
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: "Identificador único real do cliente (pode ter múltiplos customer_id)."
+        tests:
+          - not_null
+      - name: city
+        description: "Cidade do cliente."
+      - name: state
+        description: "Estado do cliente."
+        tests:
+          - not_null
+
+  - name: stg_order_items
+    description: "Itens de cada pedido com valores de produto e frete."
+    columns:
+      - name: order_id
+        description: "Identificador do pedido ao qual o item pertence."
+        tests:
+          - not_null
+      - name: product_id
+        description: "Identificador do produto."
+        tests:
+          - not_null
+      - name: price
+        description: "Preço unitário do produto em BRL."
+        tests:
+          - not_null
+      - name: freight_value
+        description: "Valor do frete em BRL."
+      - name: total_item_value
+        description: "Soma de preço e frete em BRL."
+
+  - name: stg_order_payments
+    description: "Pagamentos realizados por pedido."
+    columns:
+      - name: order_id
+        description: "Identificador do pedido."
+        tests:
+          - not_null
+      - name: payment_type
+        description: "Tipo de pagamento (credit_card, boleto, voucher, debit_card)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
+      - name: payment_value
+        description: "Valor pago em BRL."
+        tests:
+          - not_null
+      - name: installments
+        description: "Número de parcelas do pagamento."

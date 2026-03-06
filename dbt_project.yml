@@ -1,0 +1,20 @@
+name: 'ecommerce'
+version: '1.0.0'
+
+profile: 'ecommerce'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  ecommerce:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
