@@ -63,6 +63,49 @@ jobs:
       - name: dbt seed
         run: dbt seed
 
+      - name: Create test seed files
+        run: |
+          cat > seeds/olist_orders_dataset.csv << 'EOF'
+          order_id,customer_id,order_status,order_purchase_timestamp,order_approved_at,order_delivered_carrier_date,order_delivered_customer_date,order_estimated_delivery_date
+          order-001,cust-001,delivered,2021-01-01 10:00:00,2021-01-01 11:00:00,2021-01-02 10:00:00,2021-01-05 10:00:00,2021-01-10 10:00:00
+          order-002,cust-002,shipped,2021-01-02 10:00:00,2021-01-02 11:00:00,2021-01-03 10:00:00,,2021-01-10 10:00:00
+          EOF
+
+          cat > seeds/olist_customers_dataset.csv << 'EOF'
+          customer_id,customer_unique_id,customer_zip_code_prefix,customer_city,customer_state
+          cust-001,unique-001,01310,São Paulo,SP
+          cust-002,unique-002,20040,Rio de Janeiro,RJ
+          EOF
+
+          cat > seeds/olist_order_items_dataset.csv << 'EOF'
+          order_id,order_item_id,product_id,seller_id,shipping_limit_date,price,freight_value
+          order-001,1,prod-001,seller-001,2021-01-05 10:00:00,100.00,10.00
+          order-002,1,prod-002,seller-001,2021-01-06 10:00:00,200.00,20.00
+          EOF
+
+          cat > seeds/olist_order_payments_dataset.csv << 'EOF'
+          order_id,payment_sequential,payment_type,payment_installments,payment_value
+          order-001,1,credit_card,1,110.00
+          order-002,1,boleto,1,220.00
+          EOF
+
+          cat > seeds/olist_products_dataset.csv << 'EOF'
+          product_id,product_category_name,product_weight_g,product_length_cm,product_height_cm,product_width_cm
+          prod-001,beleza_saude,300,20,10,15
+          prod-002,informatica_acessorios,500,30,15,20
+          EOF
+
+          cat > seeds/olist_sellers_dataset.csv << 'EOF'
+          seller_id,seller_zip_code_prefix,seller_city,seller_state
+          seller-001,01310,São Paulo,SP
+          EOF
+
+          cat > seeds/product_category_name_translation.csv << 'EOF'
+          product_category_name,product_category_name_english
+          beleza_saude,health_beauty
+          informatica_acessorios,computers_accessories
+          EOF
+                  
       - name: dbt run
         run: dbt run
 
