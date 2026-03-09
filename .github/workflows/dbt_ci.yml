@@ -60,9 +60,6 @@ jobs:
           pip install requests
           python seeds/fetch_exchange_rates.py
 
-      - name: dbt seed
-        run: dbt seed
-
       - name: Create test seed files
         run: |
           cat > seeds/olist_orders_dataset.csv << 'EOF'
@@ -105,7 +102,10 @@ jobs:
           beleza_saude,health_beauty
           informatica_acessorios,computers_accessories
           EOF
-                  
+
+      - name: dbt seed
+        run: dbt seed
+
       - name: dbt run
         run: dbt run
 
