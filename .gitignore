@@ -28,5 +28,3 @@ profiles.yml
 .env
 api/.env
 
-# API (fica fora do projeto dbt)
-api/
