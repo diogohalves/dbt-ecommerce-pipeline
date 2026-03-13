@@ -5,12 +5,41 @@ import subprocess
 import json
 from dotenv import load_dotenv
 import os
+import shutil
 
 load_dotenv()
 
+# Gera o profiles.yml dinamicamente a partir das variáveis de ambiente
+def create_dbt_profiles():
+    profiles_dir = os.getenv("DBT_PROFILES_DIR", os.path.expanduser("~/.dbt"))
+    os.makedirs(profiles_dir, exist_ok=True)
+    profiles_path = os.path.join(profiles_dir, "profiles.yml")
+
+    profiles_content = f"""ecommerce:
+  target: prod
+  outputs:
+    prod:
+      type: postgres
+      host: {os.getenv("DB_HOST")}
+      port: {os.getenv("DB_PORT", 5432)}
+      user: {os.getenv("DB_USER")}
+      password: {os.getenv("DB_PASSWORD")}
+      dbname: {os.getenv("DB_NAME")}
+      schema: public
+      threads: 1
+"""
+    with open(profiles_path, "w") as f:
+        f.write(profiles_content)
+
+create_dbt_profiles()
+
+# Encontra o binário mf dinamicamente
+MF_BIN = os.getenv("MF_BIN") or shutil.which("mf")
+if not MF_BIN:
+    raise RuntimeError("Binário 'mf' não encontrado. Verifique o PATH ou defina MF_BIN no .env")
+
 DBT_PROJECT_DIR = os.getenv("DBT_PROJECT_DIR")
 DBT_PROFILES_DIR = os.getenv("DBT_PROFILES_DIR")
-MF_BIN = os.getenv("MF_BIN")
 
 # Validar que as variáveis obrigatórias estão definidas
 if not all([DBT_PROJECT_DIR, DBT_PROFILES_DIR, MF_BIN]):
