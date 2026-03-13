@@ -59,6 +59,9 @@ jobs:
         run: |
           pip install requests
           python seeds/fetch_exchange_rates.py
+      
+      - name: Install dbt dependencies
+        run: dbt deps
 
       - name: Create test seed files
         run: |
