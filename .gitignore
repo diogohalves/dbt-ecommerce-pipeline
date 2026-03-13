@@ -27,3 +27,6 @@ profiles.yml
 # Variáveis de ambiente
 .env
 api/.env
+
+# API (fica fora do projeto dbt)
+api/
