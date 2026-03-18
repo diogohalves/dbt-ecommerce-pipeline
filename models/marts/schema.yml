@@ -67,3 +67,77 @@ models:
         description: "Timestamp de quando o registro foi carregado pelo dbt."
         tests:
           - not_null
+
+semantic_models:
+  - name: orders
+    description: "Modelo semântico central baseado em fct_orders."
+    model: ref('fct_orders')
+    entities:
+      - name: order
+        type: primary
+        expr: order_id
+      - name: customer
+        type: foreign
+        expr: customer_id
+    dimensions:
+      - name: status
+        type: categorical
+        expr: status
+      - name: payment_type
+        type: categorical
+        expr: main_payment_type
+      - name: purchased_at
+        type: time
+        type_params:
+          time_granularity: day
+        expr: purchased_at
+    measures:
+      - name: payment_value_brl
+        description: "Valor pago em BRL"
+        agg: sum
+        expr: payment_value_brl
+        agg_time_dimension: purchased_at
+      - name: gross_value_brl
+        description: "Valor bruto em BRL"
+        agg: sum
+        expr: gross_value_brl
+        agg_time_dimension: purchased_at
+      - name: gross_value_usd
+        description: "Valor bruto em USD"
+        agg: sum
+        expr: gross_value_usd
+        agg_time_dimension: purchased_at
+      - name: order_count
+        description: "Contagem de pedidos"
+        agg: count
+        expr: order_id
+        agg_time_dimension: purchased_at
+
+metrics:
+  - name: receita_total_brl
+    label: "Receita Total (BRL)"
+    description: "Soma do valor pago em BRL"
+    type: simple
+    type_params:
+      measure: payment_value_brl
+  - name: receita_total_usd
+    label: "Receita Total (USD)"
+    description: "Soma do valor bruto convertido em USD"
+    type: simple
+    type_params:
+      measure: gross_value_usd
+  - name: total_pedidos
+    label: "Total de Pedidos"
+    description: "Contagem total de pedidos"
+    type: simple
+    type_params:
+      measure: order_count
+  - name: ticket_medio
+    label: "Ticket Médio (BRL)"
+    description: "Valor médio por pedido em BRL"
+    type: derived
+    type_params:
+      expr: "receita_total_brl / total_pedidos"
+      metrics:
+        - name: receita_total_brl
+        - name: total_pedidos

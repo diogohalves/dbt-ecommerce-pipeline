@@ -23,3 +23,8 @@ airflow.db
 profiles.yml
 *.Zone.Identifier
 *:Zone.Identifier
+
+# Variáveis de ambiente
+.env
+api/.env
+

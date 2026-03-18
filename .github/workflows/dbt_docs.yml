@@ -1,0 +1,125 @@
+name: dbt Docs
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dbt-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dbt_user
+          POSTGRES_PASSWORD: dbt_pass
+          POSTGRES_DB: dbt_ecommerce
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dbt
+        run: pip install dbt-postgres==1.8.0
+
+      - name: Install dbt dependencies
+        run: dbt deps
+
+      - name: Create profiles.yml
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << EOF
+          ecommerce:
+            target: dev
+            outputs:
+              dev:
+                type: postgres
+                host: localhost
+                port: 5432
+                user: dbt_user
+                password: dbt_pass
+                dbname: dbt_ecommerce
+                schema: public
+                threads: 1
+          EOF
+
+      - name: Create test seed files
+        run: |
+          cat > seeds/olist_orders_dataset.csv << 'EOF'
+          order_id,customer_id,order_status,order_purchase_timestamp,order_approved_at,order_delivered_carrier_date,order_delivered_customer_date,order_estimated_delivery_date
+          order-001,cust-001,delivered,2021-01-01 10:00:00,2021-01-01 11:00:00,2021-01-02 10:00:00,2021-01-05 10:00:00,2021-01-10 10:00:00
+          order-002,cust-002,shipped,2021-01-02 10:00:00,2021-01-02 11:00:00,2021-01-03 10:00:00,,2021-01-10 10:00:00
+          EOF
+          cat > seeds/olist_customers_dataset.csv << 'EOF'
+          customer_id,customer_unique_id,customer_zip_code_prefix,customer_city,customer_state
+          cust-001,unique-001,01310,São Paulo,SP
+          cust-002,unique-002,20040,Rio de Janeiro,RJ
+          EOF
+          cat > seeds/olist_order_items_dataset.csv << 'EOF'
+          order_id,order_item_id,product_id,seller_id,shipping_limit_date,price,freight_value
+          order-001,1,prod-001,seller-001,2021-01-05 10:00:00,100.00,10.00
+          order-002,1,prod-002,seller-001,2021-01-06 10:00:00,200.00,20.00
+          EOF
+          cat > seeds/olist_order_payments_dataset.csv << 'EOF'
+          order_id,payment_sequential,payment_type,payment_installments,payment_value
+          order-001,1,credit_card,1,110.00
+          order-002,1,boleto,1,220.00
+          EOF
+          cat > seeds/olist_products_dataset.csv << 'EOF'
+          product_id,product_category_name,product_weight_g,product_length_cm,product_height_cm,product_width_cm
+          prod-001,beleza_saude,300,20,10,15
+          prod-002,informatica_acessorios,500,30,15,20
+          EOF
+          cat > seeds/olist_sellers_dataset.csv << 'EOF'
+          seller_id,seller_zip_code_prefix,seller_city,seller_state
+          seller-001,01310,São Paulo,SP
+          EOF
+          cat > seeds/product_category_name_translation.csv << 'EOF'
+          product_category_name,product_category_name_english
+          beleza_saude,health_beauty
+          informatica_acessorios,computers_accessories
+          EOF
+          cat > seeds/exchange_rates.csv << 'EOF'
+          date,base_currency,target_currency,rate
+          2021-01-01,BRL,USD,0.19
+          2021-01-02,BRL,USD,0.19
+          EOF
+
+      - name: dbt seed
+        run: dbt seed
+
+      - name: dbt run
+        run: dbt run
+
+      - name: dbt docs generate
+        run: dbt docs generate
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
